@@ -5,7 +5,7 @@ The official API documentation is here: https://wiki.barentswatch.net/display/BO
 
 Python3 is required and the package requests needs to be installed:
 ``` bash
-> pip3 install requests
+> pip3 install requests pydantic
 ```
 
 

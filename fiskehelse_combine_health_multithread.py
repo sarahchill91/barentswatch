@@ -4,26 +4,30 @@ import requests
 import itertools
 import pydantic
 import datetime
+from datetime import date
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 import csv
+import argparse
 
 from pprint import pprint
 from authentication import get_token
-from authentication import config
 from pydantic import BaseModel
 from fiskehelse_localitiesfishhealth import get_fishhealth_localities
+from findweeks import find_weeks
 
+parser = argparse.ArgumentParser()# Add an argument
+parser.add_argument('--id', type=str, required=True)
+parser.add_argument('--secret', type=str, required=True)
+parser.add_argument('--start_date', type=str, required=True)
+parser.add_argument('--end_date', type=str, required=True)
+parser.add_argument('--output_path', type=str, required=True)
 
-token = get_token()
+args = parser.parse_args()
 
-# Gives all weeks - hardcoded in temporarily
-start_week = 1
-end_week = 52
-start_year = 2015
-end_year = 2023
-all_years = list(range(start_year,end_year+1,1))
-all_weeks = list(range(start_week,end_week+1,1))
+token = get_token(args.id, args.secret)
+
+all_weeks = find_weeks(args.start_date,args.end_date) # [1:] to exclude first week.
 
 class persitehealth(BaseModel): 
 	avgAdultFemaleLice: Optional[float]
@@ -52,16 +56,22 @@ class health_class(BaseModel):
 	year: int
 
 
+output_file_name = 'health.csv'
+output_file = "/".join([args.output_path,output_file_name])
+print('printing output to ' + output_file)
+	
 # Get the health data				
 def runner():
 	threads= []
-	with open('health.csv', 'w', newline='') as csvfile:
+	with open(output_file, 'w', newline='') as csvfile:
 		csvwriter = csv.writer(csvfile)
 		csvwriter.writerow(["year","week","localityNo","name","hasSalmonoids","municipality","municipalityNo","lat","lon","isSlaughterHoldingCage","isOnLand", \
 		"hasIla", "hasPd","hasReportedLice","avgAdultFemaleLice","hasMechanicalRemoval","hasCleanerfishDeployed","isFallow"])
 		with ThreadPoolExecutor(max_workers=20) as executor:
-			for year, week in itertools.product(all_years, all_weeks):
-				print(year, week)
+			for year_week in all_weeks:
+				year = year_week[0]
+				week = year_week[1]
+				print(year_week)
 				threads.append(executor.submit(get_fishhealth_localities, token, year,week))
 			for task in as_completed(threads):
 				output = health_class(**task.result())
