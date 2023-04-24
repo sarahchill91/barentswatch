@@ -1,4 +1,4 @@
-# barentswatch
+# barentswatch readme
 
 Baseline code here was developed based on a set of python files that demonstrate the use of Barentswatch API, so some files (e.g., authentication.py will be very similar): https://github.com/barentswatch/barentswatch-api-examples
 The official API documentation is here: https://wiki.barentswatch.net/display/BO/Application+registration+and+authentication
