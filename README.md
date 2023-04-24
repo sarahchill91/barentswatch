@@ -1,6 +1,6 @@
-# Barentswatch-api
+# barentswatch
 
-Baseline code was developed using a set of python files that demonstrate the use of Barentswatch API. https://github.com/barentswatch/barentswatch-api-examples
+Baseline code here was developed based on a set of python files that demonstrate the use of Barentswatch API, so some files (e.g., authentication.py will be very similar): https://github.com/barentswatch/barentswatch-api-examples
 The official API documentation is here: https://wiki.barentswatch.net/display/BO/Application+registration+and+authentication
 
 Python3 is required and the package requests needs to be installed:
