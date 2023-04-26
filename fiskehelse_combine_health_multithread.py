@@ -1,20 +1,14 @@
-# Usage: python fiskehelse_combine_health_multithread.py --id client_id --secret client_secret
+# Usage: python3 fiskehelse_combine_health_multithread.py --id client_id --secret client_secret --start_date yyyy-mm-dd --end_date yyyy-mm-dd --output_path full_path
 
 import requests
-import itertools
-import pydantic
-import datetime
-from datetime import date
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional
 import csv
 import argparse
 
-from pprint import pprint
 from authentication import get_token
-from pydantic import BaseModel
-from fiskehelse_localitiesfishhealth import get_fishhealth_localities
+from fiskehelse_localitiesfishhealth import get_fishhealth_localities, health_class, persitehealth_class
 from findweeks import find_weeks
+
 
 parser = argparse.ArgumentParser()# Add an argument
 parser.add_argument('--id', type=str, required=True)
@@ -26,34 +20,7 @@ parser.add_argument('--output_path', type=str, required=True)
 args = parser.parse_args()
 
 token = get_token(args.id, args.secret)
-
-all_weeks = find_weeks(args.start_date,args.end_date) # [1:] to exclude first week.
-
-class persitehealth(BaseModel): 
-	avgAdultFemaleLice: Optional[float]
-	hasCleanerfishDeployed: bool
-	hasIla: bool
-	hasMechanicalRemoval: bool
-	hasPd: bool
-	hasReportedLice: bool
-	hasSalmonoids: bool
-	hasSubstanceTreatments: bool
-	inFilteredSelection: bool
-	isFallow: bool
-	isOnLand: bool
-	isSlaughterHoldingCage: bool
-	lat: float
-	lon: float
-	localityNo: int
-	localityWeekId: int
-	municipality: str
-	municipalityNo: int
-	name: str
-
-class health_class(BaseModel):
-	localities: list[persitehealth]
-	week: int
-	year: int
+all_weeks = find_weeks(args.start_date,args.end_date)[1:] # [1:] to exclude first week.
 
 
 output_file_name = 'health.csv'
@@ -75,8 +42,8 @@ def runner():
 				threads.append(executor.submit(get_fishhealth_localities, token, year,week))
 			for task in as_completed(threads):
 				output = health_class(**task.result())
-				for persitehealth in output.localities:
-					csvwriter.writerow([output.year, output.week, persitehealth.localityNo,persitehealth.name,persitehealth.hasSalmonoids,persitehealth.municipality,persitehealth.municipalityNo,persitehealth.lat,persitehealth.lon,persitehealth.isSlaughterHoldingCage,persitehealth.isOnLand,persitehealth.hasIla,persitehealth.hasPd,persitehealth.hasReportedLice,persitehealth.avgAdultFemaleLice,persitehealth.hasMechanicalRemoval,persitehealth.hasCleanerfishDeployed,persitehealth.isFallow])
+				for persitehealth_class in output.localities:
+					csvwriter.writerow([output.year, output.week, persitehealth_class.localityNo,persitehealth_class.name,persitehealth_class.hasSalmonoids,persitehealth_class.municipality,persitehealth_class.municipalityNo,persitehealth_class.lat,persitehealth_class.lon,persitehealth_class.isSlaughterHoldingCage,persitehealth_class.isOnLand,persitehealth_class.hasIla,persitehealth_class.hasPd,persitehealth_class.hasReportedLice,persitehealth_class.avgAdultFemaleLice,persitehealth_class.hasMechanicalRemoval,persitehealth_class.hasCleanerfishDeployed,persitehealth_class.isFallow])
 					
 runner()
 	

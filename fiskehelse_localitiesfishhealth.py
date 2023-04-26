@@ -4,8 +4,10 @@
 import requests
 from pprint import pprint
 import argparse
-from authentication import get_token
-from authentication import config
+from authentication import get_token, config
+from pydantic import BaseModel
+from typing import Optional
+
 
 def get_fishhealth_localities(token, year, week):
   # url = f"{config['api_base_url']}/v1/geodata/fishhealth/locality/{year}/{week}"
@@ -18,6 +20,33 @@ def get_fishhealth_localities(token, year, week):
   response = requests.get(url, headers=headers)
   response.raise_for_status()
   return response.json()
+  
+class persitehealth_class(BaseModel): 
+	avgAdultFemaleLice: Optional[float]
+	hasCleanerfishDeployed: bool
+	hasIla: bool
+	hasMechanicalRemoval: bool
+	hasPd: bool
+	hasReportedLice: bool
+	hasSalmonoids: bool
+	hasSubstanceTreatments: bool
+	inFilteredSelection: bool
+	isFallow: bool
+	isOnLand: bool
+	isSlaughterHoldingCage: bool
+	lat: float
+	lon: float
+	localityNo: int
+	localityWeekId: int
+	municipality: str
+	municipalityNo: int
+	name: str
+
+class health_class(BaseModel):
+	localities: list[persitehealth_class]
+	week: int
+	year: int
+
 
 if __name__== "__main__":
 	parser = argparse.ArgumentParser()# Add an argument

@@ -1,20 +1,14 @@
-# Usage: python fiskehelse_combine_vessels_multithread.py --id client_id --secret client_secret
+# Usage: python fiskehelse_combine_vessels_multithread.py --id client_id --secret client_secret --start_date yyyy-mm-dd --end_date yyyy-mm-dd --output_path full_path
 
 import requests
-import itertools
-import pydantic
-import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional
 import csv
 import argparse
 
-from pprint import pprint
 from authentication import get_token
 from authentication import config
-from pydantic import BaseModel
 from findweeks import find_weeks
-from fiskehelse_vesselsiteweek import get_week_vessel_summary
+from fiskehelse_vesselsiteweek import get_week_vessel_summary, vessels_class, week_vessel_summary_class
 from fiskehelse_localitieswithsalmonoids_summary import get_summary_localities
 
 
@@ -28,30 +22,11 @@ args = parser.parse_args()
 
 token = get_token(args.id, args.secret)
 
-all_weeks = find_weeks(args.start_date,args.end_date) # [1:] to exclude first week.
+all_weeks = find_weeks(args.start_date,args.end_date)[1:] # [1:] to exclude first week.
 
 # Get a list of all salmonoid localities
 localities_dict = get_summary_localities(token)
 
-# Define a class for vessel data
-class vessels(BaseModel):
-      mmsi: int
-      vesselName: str
-      startTime: datetime.datetime
-      stopTime: Optional[datetime.datetime]
-      shipType: int
-      isWellboat: bool
-      shipRegisterVesselType: Optional[str]
-      shipRegisterVesselTypeNameNo: Optional[str]
-      shipRegisterVesselTypeNameEn: Optional[str]
-
-# Define a class for vessel data
-class week_vessel_summary_class(BaseModel):
-	anlysisBasedOnSurfaceArea: bool
-	localityNo: int
-	vesselVisits: list[vessels]
-	weekIsAnalyzed: bool
-	year: str
 	
 
 output_file_name = 'vessels.csv'
